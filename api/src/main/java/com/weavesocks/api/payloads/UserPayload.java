@@ -7,7 +7,7 @@ import lombok.experimental.Accessors;
 
 @Getter
 @Setter
-@Accessors (fluent = true)
+@Accessors (fluent = true) //for using getters as username(), password() instead of getUsername(), getPassword()
 public class UserPayload{
 
     @JsonProperty("username")

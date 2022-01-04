@@ -11,4 +11,7 @@ public class UserRegistrationResponse{
 	@JsonProperty("id")
 	private String id;
 
+	@JsonProperty("statusCode")
+	private String statusCode;
+
 }

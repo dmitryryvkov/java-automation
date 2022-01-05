@@ -19,9 +19,8 @@ public class UserApiService extends ApiService {
     public AssertableResponse loginUser(){
 
         return new AssertableResponse(setUp()
-                .header("Authorization", "Basic Og==")
                 .when()
-                .get("login"));
+                .get("api/users?page=2"));
     }
 
     public AssertableResponse getCustomer(Object userId){
@@ -29,5 +28,18 @@ public class UserApiService extends ApiService {
                 .given()
                 .filters(getFilters())
                 .get(String.format("customers/%s", userId)));
+    }
+
+    public AssertableResponse getAddresses() {
+        return new AssertableResponse(setUp()
+                .when()
+                .contentType("application/hal+json")
+                .get("addresses"));
+    }
+
+    public AssertableResponse getCards() {
+        return new AssertableResponse(setUp()
+                .when()
+                .get("cards"));
     }
 }

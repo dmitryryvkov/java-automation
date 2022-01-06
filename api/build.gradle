@@ -1,0 +1,40 @@
+plugins {
+    id 'java'
+}
+
+group 'org.example'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+ext {
+    testNgVersion = 'testng:7.1.0'
+    restAssuredVersion = 'rest-assured:4.4.0'
+}
+
+dependencies {
+    compile "org.testng:$testNgVersion"
+    compile "io.rest-assured:$restAssuredVersion"
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.0'
+    implementation 'com.fasterxml.jackson.core:jackson-core:2.13.0'
+    implementation 'com.github.javafaker:javafaker:1.0.2'
+    testImplementation 'ch.qos.logback:logback-classic:1.2.10'
+    implementation 'ch.qos.logback:logback-core:1.2.10'
+    implementation 'org.slf4j:slf4j-api:1.7.32'
+    implementation 'org.aeonbits.owner:owner:1.0.12'
+
+}
+
+test{
+    useTestNG()
+
+    testLogging{
+        events "PASSED", "FAILED", "SKIPPED"
+        showStandardStreams = true
+        exceptionFormat = 'full'
+    }
+
+    test.outputs.upToDateWhen {false}
+}

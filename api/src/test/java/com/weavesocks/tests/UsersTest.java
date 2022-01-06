@@ -2,10 +2,8 @@ package com.weavesocks.tests;
 
 
 import com.weavesocks.api.ProjectConfig;
-import com.weavesocks.api.core.Assertions;
+import com.weavesocks.api.services.ApiService;
 import io.restassured.RestAssured;
-import io.restassured.response.Response;
-import io.restassured.specification.RequestSpecification;
 import org.aeonbits.owner.ConfigFactory;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -13,7 +11,11 @@ import org.testng.annotations.Test;
 import java.util.HashMap;
 import java.util.Map;
 
-public class UsersTest {
+import static org.apache.http.HttpStatus.*;
+import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsNull.notNullValue;
+
+public class UsersTest extends ApiService {
 
     //private Faker faker;
 
@@ -26,185 +28,184 @@ public class UsersTest {
 
     @Test
     public void testCheckAbilityToGetAllUsers() {
-        Response response = RestAssured
-                .given().log().all()
-                .get("users?page=2");
-        response.then().assertThat().statusCode(200);
 
-        Assertions.assertEquals(response.jsonPath().get("total").toString(), "12", "Incorrect count of users");
+        setUpRequest()
+                .get("users?page=2")
+                .then()
+                .statusCode(SC_OK)
+                .body(
+                        "total", is(12)
+                );
     }
 
     @Test
     public void testCheckSingleUserInfo() {
-        Response response = RestAssured
-                .given().log().all()
-                .get("users/1");
-
-        response.then().assertThat().statusCode(200);
-
-        Assertions.assertEquals(response.jsonPath().get("data.id").toString(), "1", "Incorrect count of users");
-        Assertions.assertEquals(response.jsonPath().get("data.email").toString(), "george.bluth@reqres.in", "Incorrect email");
-        Assertions.assertEquals(response.jsonPath().get("data.first_name").toString(), "George", "Incorrect first name");
-        Assertions.assertEquals(response.jsonPath().get("data.last_name").toString(), "Bluth", "Incorrect last name");
+        setUpRequest()
+                .get("users/1")
+                .then()
+                .statusCode(SC_OK)
+                .body(
+                        "data.id", is(1),
+                        "data.email", is("george.bluth@reqres.in"),
+                        "data.first_name", is("George"),
+                        "data.last_name", is("Bluth")
+                );
     }
 
     @Test
     public void userCanBeDeleted() {
-        Response response = RestAssured.given()
-                .log().all()
-                .delete("users/1");
-
-        response.then().assertThat().statusCode(204);
+        setUpRequest()
+                .delete("users/1")
+                .then()
+                .statusCode(SC_NO_CONTENT);
     }
 
     @Test
     public void userCanBeCreated() {
-        RequestSpecification request = RestAssured.given();
-        Map<String, Object> map = new HashMap<>();
-        map.put("name", "morpheus");
-        map.put("job", "leader");
+        Map<String, Object> user = new HashMap<>();
+        user.put("name", "morpheus");
+        user.put("job", "leader");
 
-        Response response = request
-                .body(map)
-                .log().all()
-                .post("users");
-
-        response.then().assertThat().statusCode(201);
-
-        Assertions.assertTrue(!response.jsonPath().get("id").toString().isEmpty(), "Empty id parameter");
-        Assertions.assertTrue(!response.jsonPath().get("createdAt").toString().isEmpty(), "Empty creation time");
+        setUpRequest()
+                .body(user)
+                .post("users")
+                .then()
+                .statusCode(SC_CREATED)
+                .body(
+                        "name", is(user.get("name")),
+                        "job", is(user.get("job")),
+                        "id", notNullValue(),
+                        "createdAt", notNullValue()
+                );
     }
 
     @Test
     public void newUserCanBeRegisteredSuccessfully() {
-        RequestSpecification request = RestAssured.given();
-        Map<String, Object> map = new HashMap<>();
-        map.put("password", "pistol");
-        map.put("email", "eve.holt@reqres.in");
+        Map<String, Object> user = new HashMap<>();
+        user.put("password", "pistol");
+        user.put("email", "eve.holt@reqres.in");
 
-        Response response = request
-                .body(map)
-                .log().all()
-                .post("register");
-
-        response.then().assertThat().statusCode(200);
-
-        Assertions.assertTrue(!response.jsonPath().get("id").toString().isEmpty(), "Empty id parameter");
-        Assertions.assertTrue(!response.jsonPath().get("token").toString().isEmpty(), "Empty token");
+        setUpRequest()
+                .body(user)
+                .post("register")
+                .then()
+                .statusCode(SC_OK)
+                .body(
+                        "id", is(4),
+                        "token", notNullValue()
+                );
     }
 
     @Test
     public void newUserCanNotBeRegisteredSuccessfullyWithEmptyPassword() {
-        RequestSpecification request = RestAssured.given();
-        Map<String, Object> map = new HashMap<>();
-        map.put("email", "eve.holt@reqres.in");
+        Map<String, Object> user = new HashMap<>();
+        user.put("email", "eve.holt@reqres.in");
 
-        Response response = request
-                .body(map)
-                .log().all()
-                .post("register");
-
-        response.then().assertThat().statusCode(400);
-
-        Assertions.assertEquals(response.jsonPath().get("error").toString(), "Missing email or username", "Incorrect error message");
+        setUpRequest()
+                .body(user)
+                .post("register")
+                .then()
+                .statusCode(SC_BAD_REQUEST)
+                .body(
+                        "error", is("Missing email or username")
+                );
     }
 
     @Test
     public void newUserCanNotBeRegisteredSuccessfullyWithEmptyEmail() {
-        RequestSpecification request = RestAssured.given();
-        Map<String, Object> map = new HashMap<>();
-        map.put("password", "pistol");
+        Map<String, Object> user = new HashMap<>();
+        user.put("password", "pistol");
 
-        Response response = request
-                .body(map)
-                .log().all()
-                .post("register");
-
-        response.then().assertThat().statusCode(400);
-
-        Assertions.assertEquals(response.jsonPath().get("error").toString(), "Missing email or username", "Incorrect error message");
+        setUpRequest()
+                .body(user)
+                .post("register")
+                .then()
+                .statusCode(SC_BAD_REQUEST)
+                .body(
+                        "error", is("Missing email or username")
+                );
     }
 
     @Test
     public void userCanLogin() {
-        RequestSpecification request = RestAssured.given();
-        Map<String, Object> map = new HashMap<>();
-        map.put("email", "eve.holt@reqres.in");
-        map.put("password", "pistol");
+        Map<String, Object> user = new HashMap<>();
+        user.put("email", "eve.holt@reqres.in");
+        user.put("password", "pistol");
 
-        Response response = request
-                .body(map)
-                .log().all()
-                .post("login");
+        setUpRequest()
+                .body(user)
+                .post("login")
+                .then()
+                .statusCode(SC_OK)
+                .body(
+                        "token", notNullValue()
+                );
 
-        response.then().assertThat().statusCode(200);
-
-        Assertions.assertTrue(!response.jsonPath().get("token").toString().isEmpty(), "Empty token");
     }
 
     @Test
     public void userCanNotLoginWithMissingEmail() {
-        RequestSpecification request = RestAssured.given();
-        Map<String, Object> map = new HashMap<>();
-        map.put("password", "pistol");
+        Map<String, Object> user = new HashMap<>();
+        user.put("password", "pistol");
 
-        Response response = request
-                .body(map)
-                .log().all()
-                .post("login");
-
-        response.then().assertThat().statusCode(400);
-
-        Assertions.assertEquals(response.jsonPath().get("error").toString(), "Missing email or username", "Incorrect error message");
+        setUpRequest()
+                .body(user)
+                .post("login")
+                .then()
+                .statusCode(SC_BAD_REQUEST)
+                .body(
+                        "error", is("Missing email or username")
+                );
     }
 
     @Test
     public void userCanNotLoginWithMissingPassword() {
-        RequestSpecification request = RestAssured.given();
-        Map<String, Object> map = new HashMap<>();
-        map.put("password", "pistol");
+        Map<String, Object> user = new HashMap<>();
+        user.put("password", "pistol");
 
-        Response response = request
-                .body(map)
-                .log().all()
-                .post("login");
-
-        response.then().assertThat().statusCode(400);
-
-        Assertions.assertEquals(response.jsonPath().get("error").toString(), "Missing email or username", "Incorrect error message");
+        setUpRequest()
+                .body(user)
+                .post("login")
+                .then()
+                .statusCode(SC_BAD_REQUEST)
+                .body(
+                        "error", is("Missing email or username")
+                );
     }
 
     @Test
     public void userDataCanUpdatedByPatchMethod() {
-        RequestSpecification request = RestAssured.given();
-        Map<String, Object> map = new HashMap<>();
-        map.put("name", "morpheus");
-        map.put("job", "zion resident");
+        Map<String, Object> user = new HashMap<>();
+        user.put("name", "morpheus");
+        user.put("job", "zion resident");
 
-        Response response = request
-                .body(map)
-                .log().all()
-                .patch("users/2");
-
-        response.then().assertThat().statusCode(200);
-
-        Assertions.assertTrue(!response.jsonPath().get("updatedAt").toString().isEmpty(), "Empty updated time");
+        setUpRequest()
+                .body(user)
+                .patch("users/2")
+                .then()
+                .statusCode(SC_OK)
+                .body(
+                        "name", is(user.get("name")),
+                        "job", is(user.get("job")),
+                        "updatedAt", notNullValue()
+                );
     }
 
     @Test
     public void userDataCanUpdatedByPutMethod() {
-        RequestSpecification request = RestAssured.given();
-        Map<String, Object> map = new HashMap<>();
-        map.put("name", "morpheus");
-        map.put("job", "zion resident");
+        Map<String, Object> user = new HashMap<>();
+        user.put("name", "Alex");
+        user.put("job", "petuch");
 
-        Response response = request
-                .body(map)
-                .log().all()
-                .put("users/2");
-
-        response.then().assertThat().statusCode(200);
-
-        Assertions.assertTrue(!response.jsonPath().get("updatedAt").toString().isEmpty(), "Empty updated time");
+        setUpRequest()
+                .body(user)
+                .put("users/2")
+                .then()
+                .statusCode(SC_OK)
+                .body(
+                        "name", is(user.get("name")),
+                        "job", is(user.get("job")),
+                        "updatedAt", notNullValue()
+                );
     }
 }

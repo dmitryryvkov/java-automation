@@ -16,7 +16,7 @@ import java.util.List;
 public class ApiService {
     ProjectConfig projectConfig = ConfigFactory.create(ProjectConfig.class);
 
-    protected RequestSpecification setUp(){
+    protected RequestSpecification setUpRequest(){
         return RestAssured
                 .given().contentType(ContentType.JSON)
                 .filters(getFilters());

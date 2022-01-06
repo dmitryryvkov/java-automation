@@ -10,7 +10,7 @@ public class UserApiService extends ApiService {
 
     public AssertableResponse registerUser(UserPayload user) {
 
-        return new AssertableResponse(setUp()
+        return new AssertableResponse(setUpRequest()
                 .body(user)
                 .when()
                 .post("register"));
@@ -18,7 +18,7 @@ public class UserApiService extends ApiService {
 
     public AssertableResponse loginUser(){
 
-        return new AssertableResponse(setUp()
+        return new AssertableResponse(setUpRequest()
                 .when()
                 .get("api/users?page=2"));
     }
@@ -31,14 +31,14 @@ public class UserApiService extends ApiService {
     }
 
     public AssertableResponse getAddresses() {
-        return new AssertableResponse(setUp()
+        return new AssertableResponse(setUpRequest()
                 .when()
                 .contentType("application/hal+json")
                 .get("addresses"));
     }
 
     public AssertableResponse getCards() {
-        return new AssertableResponse(setUp()
+        return new AssertableResponse(setUpRequest()
                 .when()
                 .get("cards"));
     }
